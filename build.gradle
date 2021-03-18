@@ -1,0 +1,40 @@
+plugins {
+    // Apply the java plugin to add support for Java
+    id 'java'
+
+    // Apply the application plugin to add support for building a CLI application.
+    id 'application'
+}
+
+sourceSets {
+    main.java.srcDirs = ["src"]
+    test.java.srcDirs = ["test"]
+}
+
+compileJava {
+    options.compilerArgs += ["-Xlint:unchecked"]
+}
+
+repositories {
+    // Use jcenter for resolving dependencies.
+    // You can declare any Maven/Ivy/file repository here.
+    jcenter()
+}
+
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.1'
+}
+
+application {
+    // Define the main class for the application.
+    mainClass = 'interpolation.Main'
+}
+
+test {
+    useJUnitPlatform()
+    testLogging {
+        exceptionFormat "full"
+        showStackTraces false
+    }
+}
