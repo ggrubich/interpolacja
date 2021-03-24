@@ -40,22 +40,11 @@ public class PolyTest {
     }
 
     @Test
-    public void testEqualsTrue() {
-        Poly a = new Poly(new Rational(1), new Rational(2), new Rational(1, 2));
-        Poly b = new Poly(new Rational(1), new Rational(2), new Rational(1, 2));
-        assertTrue(a.equals(a), "self equals self");
-        assertTrue(a.equals(b), "self equals other");
-        assertTrue(b.equals(a), "other equals self");
-    }
-
-    @Test
-    public void testEqualsFalse() {
-        Poly a = new Poly(new Rational(1), new Rational(2), new Rational(1, 2));
+    public void testEquality() {
+        Poly a1 = new Poly(new Rational(1), new Rational(2), new Rational(1, 2));
+        Poly a2 = new Poly(new Rational(1), new Rational(2), new Rational(1, 2));
         Poly b = new Poly(new Rational(2), new Rational(1), new Rational(1, 2));
-        assertFalse(a.equals(null), "self not equals null");
-        assertFalse(a.equals(12), "self not equals int");
-        assertFalse(a.equals(b), "self not equals other");
-        assertFalse(b.equals(a), "other not equals self");
+        TestUtils.testEquality(a1, a2, b);
     }
 
     @Test

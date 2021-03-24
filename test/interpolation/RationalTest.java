@@ -41,29 +41,11 @@ public class RationalTest {
     }
 
     @Test
-    public void testEqualsTrue() {
-        Rational x = new Rational(3, 4);
-        Rational y = new Rational(9, 12);
-        assertTrue(x.equals(x), "self equals self");
-        assertTrue(x.equals(y), "self equals other");
-        assertTrue(y.equals(x), "other equals self");
-    }
-
-    @Test
-    public void testEqualsFalse() {
-        Rational x = new Rational(3, 5);
-        Rational y = new Rational(4, 5);
-        assertFalse(x.equals(null), "self not equals null");
-        assertFalse(x.equals(y), "self not equals other");
-        assertFalse(y.equals(x), "other not equals self");
-    }
-
-    @Test
-    public void testHashCode() {
-        Rational x = new Rational(3, 4);
-        Rational y = new Rational(9, 12);
-        assertEquals(x.hashCode(), y.hashCode(),
-                "hash codes of equal objects are equal");
+    public void testEquality() {
+        Rational a1 = new Rational(3, 4);
+        Rational a2 = new Rational(9, 12);
+        Rational b = new Rational(2, 4);
+        TestUtils.testEquality(a1, a2, b);
     }
 
     @Test
