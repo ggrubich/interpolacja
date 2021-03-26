@@ -124,4 +124,135 @@ public class Rational {
             return num + "/" + den;
         }
     }
+
+    private static class Parser {
+        private final String input;
+        private int position;
+
+        private Parser(String input) {
+            this.input = input;
+            position = 0;
+        }
+
+        private boolean eof() {
+            return position >= input.length();
+        }
+
+        private char get() {
+            return eof() ? 0 : input.charAt(position);
+        }
+
+        private void next() {
+            if (!eof()) {
+                ++position;
+            }
+        }
+
+        private void error(String msg) {
+            throw new NumberFormatException(
+                    "Invalid rational number: " + msg + " at " + position + " in `" + input + "`");
+        }
+
+        private boolean attempt(char c) {
+            if (get() != c) {
+                return false;
+            }
+            next();
+            return true;
+        }
+
+        private void require(char c) {
+            if (!attempt(c)) {
+                error("expected " + c);
+            }
+        }
+
+        private void skipSpace() {
+            while (Character.isWhitespace(get())) {
+                next();
+            }
+        }
+
+        // 123
+        private long parseNatural() {
+            if (!Character.isDigit(get())) {
+                error("expected digit");
+            }
+            long n = 0;
+            do {
+                n *= 10;
+                n += Character.digit(get(), 10);
+                next();
+            } while (Character.isDigit(get()));
+            return n;
+        }
+
+        // 1234 (but means 1234/10000)
+        private Rational parseDecimals() {
+            int start = position;
+            long p = parseNatural();
+            long q = (long) Math.pow(10, position - start);
+            return new Rational(p, q);
+        }
+
+        // 12 / 34
+        private Rational parseFraction() {
+            long p = parseNatural();
+            skipSpace();
+            require('/');
+            skipSpace();
+            long q = parseNatural();
+            return new Rational(p, q);
+        }
+
+        private Rational parse() {
+            skipSpace();
+            int sign = 1;
+            if (attempt('-')) {
+                sign = -1;
+                skipSpace();
+            }
+            Rational out = new Rational(parseNatural());
+            if (attempt('.')) {
+                // decimal
+                Rational b = parseDecimals();
+                out = out.add(b);
+            } else {
+                skipSpace();
+                if (attempt('/')) {
+                    // fraction
+                    skipSpace();
+                    long q = parseNatural();
+                    out = out.div(new Rational(q));
+                } else if (!eof()) {
+                    // mixed
+                    if (attempt('_') || attempt('+')) {
+                        skipSpace();
+                    }
+                    Rational b = parseFraction();
+                    out = out.add(b);
+                }
+            }
+            skipSpace();
+            if (!eof()) {
+                error("expected eof");
+            }
+            return sign > 0 ? out : out.negate();
+        }
+    }
+
+    // Parses string representation of a rational.
+    // The following forms are supported:
+    //  - integers, e.g. "12"
+    //  - decimals, e.g. "12.15"
+    //  - fractions, e.g. "1/3"
+    //  - mixed numbers, e.g. "1 2/3", "1_2/3", "1+2/3"
+    // Numbers can be prepended with a "-" to negate them.
+    // Leading and trailing whitespace as well as whitespace around
+    // "-", "_", "+" and "/" symbols is allowed.
+    // On invalid input a NumberFormatException is thrown.
+    public static Rational parse(String input) {
+        Parser p = new Parser(input);
+        return p.parse();
+    }
 }

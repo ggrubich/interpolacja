@@ -96,4 +96,65 @@ public class RationalTest {
                 new Rational(1, 2).div(new Rational(3, 4)),
                 "1/2 / 3/4");
     }
+
+    private void assertParse(Rational expected, String input) {
+        Rational actual = Rational.parse(input);
+        assertEquals(expected, actual, "parse `" + input + "`");
+    }
+
+    @Test
+    public void testParseInt() {
+        assertParse(new Rational(12), "12");
+    }
+
+    @Test
+    public void testParseDecimal() {
+        assertParse(new Rational(-243, 20), "- 12.15 ");
+    }
+
+    @Test
+    public void testParseFraction() {
+        assertParse(new Rational(-12, 34), "  -12 /34");
+    }
+
+    @Test
+    public void testParseMixedSpace() {
+        assertParse(new Rational(7, 4), "1 3 / 4");
+    }
+
+    @Test
+    public void testParseMixedUnderscore() {
+        assertParse(new Rational(7, 4), " 1_3/4  ");
+    }
+
+    @Test
+    public void testParseMixedPlus() {
+        assertParse(new Rational(7, 4), "1 +3/ 4");
+    }
+
+    private void assertParseThrows(String input) {
+        assertThrows(NumberFormatException.class,
+                () -> Rational.parse(input),
+                "parse " + input);
+    }
+
+    @Test
+    public void testParseInvalidInt() {
+        assertParseThrows("12 a");
+    }
+
+    @Test
+    public void testParseInvalidDecimal() {
+        assertParseThrows("-12.");
+    }
+
+    @Test
+    public void testParseInvalidFraction() {
+        assertParseThrows("/4");
+    }
+
+    @Test
+    public void testParseInvalidMixed() {
+        assertParseThrows("- 1 3/");
+    }
 }
