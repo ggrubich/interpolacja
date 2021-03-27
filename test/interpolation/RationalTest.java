@@ -97,6 +97,21 @@ public class RationalTest {
                 "1/2 / 3/4");
     }
 
+    @Test
+    public void testToStringInt() {
+        assertEquals("13", new Rational(13).toString(), "to string");
+    }
+
+    @Test
+    public void testToStringFraction() {
+        assertEquals("-5/7", new Rational(-5, 7).toString(), "to string");
+    }
+
+    @Test
+    public void testToStringMixed() {
+        assertEquals("-1 2/3", new Rational(-5, 3).toString(), "to string");
+    }
+
     private void assertParse(Rational expected, String input) {
         Rational actual = Rational.parse(input);
         assertEquals(expected, actual, "parse `" + input + "`");

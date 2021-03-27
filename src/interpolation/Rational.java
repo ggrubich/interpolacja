@@ -120,8 +120,11 @@ public class Rational {
         if (den == 1) {
             return Long.toString(num);
         }
-        else {
+        else if (Math.abs(num) < den){
             return num + "/" + den;
+        }
+        else {
+            return (num / den) + " " + (Math.abs(num) % den) + "/" + den;
         }
     }
 
