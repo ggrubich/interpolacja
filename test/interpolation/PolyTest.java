@@ -99,4 +99,27 @@ public class PolyTest {
         Rational y = new Rational(7);
         assertEquals(y, p.eval(x), "[" + p + "](" + x + ")");
     }
+
+    @Test
+    public void testToStringZero() {
+        assertEquals("0", new Poly().toString(), "zero poly to string");
+    }
+
+    @Test
+    public void testToStringOne() {
+        Poly p = new Poly(new Rational(0), new Rational(0), new Rational(-2));
+        assertEquals("-2x^2", p.toString(), "to string");
+    }
+
+    @Test
+    public void testToStringMany() {
+        Poly p = new Poly(
+            new Rational(1),
+            new Rational(-2),
+            new Rational(1, 2),
+            new Rational(-1)
+        );
+        assertEquals("-x^3 + (1/2)x^2 - 2x + 1", p.toString(), "to string");
+
+    }
 }

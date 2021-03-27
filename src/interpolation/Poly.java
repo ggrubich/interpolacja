@@ -102,28 +102,38 @@ public class Poly {
 
     @Override
     public String toString() {
+        if (degree() < 0) {
+            return "0";
+        }
         StringBuilder buf = new StringBuilder();
-        buf.append(get(0));
-        for (int i = 1; i <= degree(); ++i) {
+        for (int i = degree(); i >= 0; --i) {
             Rational a = get(i);
             if (a.getNum() == 0) {
                 continue;
             }
-            buf.append(" ");
-            buf.append(a.getNum() >= 0 ? "+" : "-");
-            buf.append(" ");
-            if (a.getDen() == 1) {
-                buf.append(a.abs().toString());
+            if (buf.length() == 0) {
+                if (a.getNum() < 0) {
+                    buf.append("-");
+                }
             }
             else {
-                buf.append("(");
-                buf.append(a.abs().toString());
-                buf.append(")");
+                buf.append(a.getNum() >= 0 ? " + " : " - ");
             }
-            buf.append("x");
-            if (i > 1) {
-                buf.append("^");
-                buf.append(i);
+            a = a.abs();
+            if (i == 0) {
+                buf.append(a);
+            }
+            else {
+                if (a.getDen() == 1 && a.getNum() > 1) {
+                    buf.append(a);
+                }
+                else if (a.getDen() > 1) {
+                    buf.append("(" + a + ")");
+                }
+                buf.append("x");
+                if (i > 1) {
+                    buf.append("^" + i);
+                }
             }
         }
         return buf.toString();
