@@ -1,5 +1,6 @@
 package interpolation;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 // Immutable polynomial with Rational coefficients.
@@ -84,15 +85,7 @@ public class Poly {
             return false;
         }
         Poly other = (Poly)obj;
-        if (degree() != other.degree()) {
-            return false;
-        }
-        for (int i = 0; i < degree(); ++i) {
-            if (!get(i).equals(other.get(i))) {
-                return false;
-            }
-        }
-        return true;
+        return Arrays.equals(coeffs, other.coeffs);
     }
 
     @Override
