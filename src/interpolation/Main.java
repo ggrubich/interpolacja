@@ -18,6 +18,8 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
+import java.util.Collections;
+
 // Custom TableCell subclass that handles parse errors correctly.
 class RationalCell extends TableCell<Point, Rational> {
     private final TextField textField = new TextField();
@@ -69,6 +71,7 @@ class RationalCell extends TableCell<Point, Rational> {
 
 class InputView extends VBox {
     private final ObservableList<Point> points;
+    private final TableView<Point> table;
     private final TextField addXField;
     private final TextField addYField;
 
@@ -81,7 +84,7 @@ class InputView extends VBox {
         setPrefWidth(400);
         setMinWidth(200);
 
-        final TableView<Point> table = new TableView<>();
+        table = new TableView<>();
         table.setItems(points);
         VBox.setVgrow(table, Priority.ALWAYS);
         table.setEditable(true);
@@ -92,6 +95,7 @@ class InputView extends VBox {
         xColumn.setOnEditCommit(this::onChangeX);
         // We subtract 1.5 to avoid triggering the scrollbar.
         xColumn.prefWidthProperty().bind(table.widthProperty().divide(2).subtract(1.5));
+        table.getSortOrder().add(xColumn);
         table.getColumns().add(xColumn);
 
         final TableColumn<Point, Rational> yColumn = new TableColumn<>("y");
@@ -165,7 +169,14 @@ class InputView extends VBox {
                 return;
             }
         }
-        points.add(new Point(x, y));
+        Point point = new Point(x, y);
+        if (table.getComparator() == null) {
+            points.add(point);
+        }
+        else {
+            int idx = Collections.binarySearch(points, point, table.getComparator());
+            points.add(idx >= 0 ? idx : -(idx + 1), point);
+        }
         addXField.clear();
         addYField.clear();
         addXField.requestFocus();

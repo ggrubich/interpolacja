@@ -98,6 +98,24 @@ public class RationalTest {
     }
 
     @Test
+    public void testCompareLT() {
+        assertTrue(new Rational(3, 4).compareTo(new Rational(4, 3)) < 0,
+                "3/4 < 4/3");
+    }
+
+    @Test
+    public void testCompareEQ() {
+        assertTrue(new Rational(3, 4).compareTo(new Rational(3, 4)) == 0,
+                "3/4 == 3/4");
+    }
+
+    @Test
+    public void testCompareGT() {
+        assertTrue(new Rational(3, 4).compareTo(new Rational(-3, 4)) > 0,
+                "3/4 > -3/4");
+    }
+
+    @Test
     public void testToStringInt() {
         assertEquals("13", new Rational(13).toString(), "to string");
     }

@@ -7,7 +7,7 @@ import java.util.Objects;
 // numbers to their canonical form, i.e. irreducible fractions with
 // a non-negative denominator. So, for example, constructing 2/-4
 // will actually yield -1/2 and multiplication 1/2 * 2/3 returns 1/3.
-public class Rational {
+public class Rational implements Comparable<Rational> {
     private final long num;
     private final long den;
 
@@ -113,6 +113,11 @@ public class Rational {
     @Override
     public int hashCode() {
         return Objects.hash(num, den);
+    }
+
+    @Override
+    public int compareTo(Rational x) {
+        return Long.signum(sub(x).getNum());
     }
 
     @Override
