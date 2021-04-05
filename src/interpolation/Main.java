@@ -6,6 +6,8 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.event.Event;
+import javafx.scene.input.KeyCode;
 import javafx.scene.text.Font;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
@@ -88,6 +90,13 @@ class InputView extends VBox {
         table.setItems(points);
         VBox.setVgrow(table, Priority.ALWAYS);
         table.setEditable(true);
+        table.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+
+        table.setOnKeyPressed(ev -> {
+            if (ev.getCode().equals(KeyCode.DELETE)) {
+                onDelete(ev);
+            }
+        });
 
         final TableColumn<Point, Rational> xColumn = new TableColumn<>("x");
         xColumn.setCellValueFactory(new PropertyValueFactory<>("x"));
@@ -105,8 +114,8 @@ class InputView extends VBox {
         yColumn.prefWidthProperty().bind(table.widthProperty().divide(2).subtract(1.5));
         table.getColumns().add(yColumn);
 
-        final HBox menu = new HBox();
-        menu.setSpacing(6.0);
+        final HBox textFields = new HBox();
+        textFields.setSpacing(6.0);
 
         addXField = new TextField();
         HBox.setHgrow(addXField, Priority.ALWAYS);
@@ -118,13 +127,35 @@ class InputView extends VBox {
         addYField.setPromptText("y");
         addYField.setOnAction(this::onAdd);
 
+        textFields.getChildren().addAll(addXField, addYField);
+
+        final HBox buttons = new HBox();
+        buttons.setSpacing(6.0);
+
         final Button addButton = new Button("Add");
         addButton.setMinWidth(45);
+        addButton.setPrefWidth(60);
+        addButton.setMaxWidth(Double.MAX_VALUE);
+        HBox.setHgrow(addButton, Priority.ALWAYS);
         addButton.setOnAction(this::onAdd);
 
-        menu.getChildren().addAll(addXField, addYField, addButton);
+        final Button deleteButton = new Button("Delete");
+        deleteButton.setMinWidth(60);
+        deleteButton.setPrefWidth(60);
+        deleteButton.setMaxWidth(Double.MAX_VALUE);
+        HBox.setHgrow(deleteButton, Priority.ALWAYS);
+        deleteButton.setOnAction(this::onDelete);
 
-        getChildren().addAll(table, menu);
+        final Button clearButton = new Button("Clear");
+        clearButton.setMinWidth(55);
+        clearButton.setPrefWidth(60);
+        clearButton.setMaxWidth(Double.MAX_VALUE);
+        HBox.setHgrow(clearButton, Priority.ALWAYS);
+        clearButton.setOnAction(this::onClear);
+
+        buttons.getChildren().addAll(addButton, deleteButton, clearButton);
+
+        getChildren().addAll(table, textFields, buttons);
     }
 
     private void onChangeX(TableColumn.CellEditEvent<Point, Rational> ev) {
@@ -180,6 +211,25 @@ class InputView extends VBox {
         addXField.clear();
         addYField.clear();
         addXField.requestFocus();
+    }
+
+    private void onDelete(Event ev) {
+        ev.consume();
+        TableView.TableViewSelectionModel<Point> sel = table.getSelectionModel();
+        points.removeAll(sel.getSelectedItems());
+        // Removing rows from the table causes it forget its focused column,
+        // which means that editing cells with a keyboard shortcut will not work.
+        // To compensate for that, we explicitly focus the first column.
+        TableView.TableViewFocusModel<Point> focus = table.getFocusModel();
+        focus.focus(focus.getFocusedIndex(), table.getColumns().get(0));
+        // Force selection to be the same as focus (this invariant can be violated
+        // after deleting multiple nonconsecutive rows).
+        sel.clearAndSelect(focus.getFocusedIndex());
+    }
+
+    private void onClear(ActionEvent ev) {
+        ev.consume();
+        points.clear();
     }
 }
 
