@@ -1,5 +1,6 @@
 package interpolation;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 // Immutable polynomial with Rational coefficients.
@@ -84,15 +85,7 @@ public class Poly {
             return false;
         }
         Poly other = (Poly)obj;
-        if (degree() != other.degree()) {
-            return false;
-        }
-        for (int i = 0; i < degree(); ++i) {
-            if (!get(i).equals(other.get(i))) {
-                return false;
-            }
-        }
-        return true;
+        return Arrays.equals(coeffs, other.coeffs);
     }
 
     @Override
@@ -102,28 +95,41 @@ public class Poly {
 
     @Override
     public String toString() {
+        if (degree() < 0) {
+            return "0";
+        }
         StringBuilder buf = new StringBuilder();
-        buf.append(get(0));
-        for (int i = 1; i <= degree(); ++i) {
+        for (int i = degree(); i >= 0; --i) {
             Rational a = get(i);
             if (a.getNum() == 0) {
                 continue;
             }
-            buf.append(" ");
-            buf.append(a.getNum() >= 0 ? "+" : "-");
-            buf.append(" ");
-            if (a.getDen() == 1) {
-                buf.append(a.abs().toString());
+            // sign
+            if (buf.length() == 0) {
+                if (a.getNum() < 0) {
+                    buf.append("- ");
+                }
             }
             else {
-                buf.append("(");
-                buf.append(a.abs().toString());
-                buf.append(")");
+                buf.append(a.getNum() >= 0 ? " + " : " - ");
             }
-            buf.append("x");
-            if (i > 1) {
-                buf.append("^");
-                buf.append(i);
+            // number
+            a = a.abs();
+            if (i == 0) {
+                buf.append(a);
+            }
+            else {
+                if (!(a.getDen() == 1 && a.getNum() == 1)) {
+                    String str = a.toString();
+                    if (str.contains("/") || str.contains(" ")) {
+                        str = "(" + str + ")";
+                    }
+                    buf.append(str);
+                }
+                buf.append("x");
+                if (i > 1) {
+                    buf.append("^" + i);
+                }
             }
         }
         return buf.toString();

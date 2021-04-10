@@ -41,29 +41,11 @@ public class RationalTest {
     }
 
     @Test
-    public void testEqualsTrue() {
-        Rational x = new Rational(3, 4);
-        Rational y = new Rational(9, 12);
-        assertTrue(x.equals(x), "self equals self");
-        assertTrue(x.equals(y), "self equals other");
-        assertTrue(y.equals(x), "other equals self");
-    }
-
-    @Test
-    public void testEqualsFalse() {
-        Rational x = new Rational(3, 5);
-        Rational y = new Rational(4, 5);
-        assertFalse(x.equals(null), "self not equals null");
-        assertFalse(x.equals(y), "self not equals other");
-        assertFalse(y.equals(x), "other not equals self");
-    }
-
-    @Test
-    public void testHashCode() {
-        Rational x = new Rational(3, 4);
-        Rational y = new Rational(9, 12);
-        assertEquals(x.hashCode(), y.hashCode(),
-                "hash codes of equal objects are equal");
+    public void testEquality() {
+        Rational a1 = new Rational(3, 4);
+        Rational a2 = new Rational(9, 12);
+        Rational b = new Rational(2, 4);
+        TestUtils.testEquality(a1, a2, b);
     }
 
     @Test
@@ -113,5 +95,104 @@ public class RationalTest {
         assertEquals(new Rational(2, 3),
                 new Rational(1, 2).div(new Rational(3, 4)),
                 "1/2 / 3/4");
+    }
+
+    @Test
+    public void testCompareLT() {
+        assertTrue(new Rational(3, 4).compareTo(new Rational(4, 3)) < 0,
+                "3/4 < 4/3");
+    }
+
+    @Test
+    public void testCompareEQ() {
+        assertTrue(new Rational(3, 4).compareTo(new Rational(3, 4)) == 0,
+                "3/4 == 3/4");
+    }
+
+    @Test
+    public void testCompareGT() {
+        assertTrue(new Rational(3, 4).compareTo(new Rational(-3, 4)) > 0,
+                "3/4 > -3/4");
+    }
+
+    @Test
+    public void testToStringInt() {
+        assertEquals("13", new Rational(13).toString(), "to string");
+    }
+
+    @Test
+    public void testToStringDecimal() {
+        assertEquals("-0.375", new Rational(-3, 8).toString(), "to string");
+    }
+
+    @Test
+    public void testToStringFraction() {
+        assertEquals("-5/7", new Rational(-5, 7).toString(), "to string");
+    }
+
+    @Test
+    public void testToStringMixed() {
+        assertEquals("-1 2/3", new Rational(-5, 3).toString(), "to string");
+    }
+
+    private void assertParse(Rational expected, String input) {
+        Rational actual = Rational.parse(input);
+        assertEquals(expected, actual, "parse `" + input + "`");
+    }
+
+    @Test
+    public void testParseInt() {
+        assertParse(new Rational(12), "12");
+    }
+
+    @Test
+    public void testParseDecimal() {
+        assertParse(new Rational(-243, 20), "- 12.15 ");
+    }
+
+    @Test
+    public void testParseFraction() {
+        assertParse(new Rational(-12, 34), "  -12 /34");
+    }
+
+    @Test
+    public void testParseMixedSpace() {
+        assertParse(new Rational(7, 4), "1 3 / 4");
+    }
+
+    @Test
+    public void testParseMixedUnderscore() {
+        assertParse(new Rational(7, 4), " 1_3/4  ");
+    }
+
+    @Test
+    public void testParseMixedPlus() {
+        assertParse(new Rational(7, 4), "1 +3/ 4");
+    }
+
+    private void assertParseThrows(String input) {
+        assertThrows(NumberFormatException.class,
+                () -> Rational.parse(input),
+                "parse " + input);
+    }
+
+    @Test
+    public void testParseInvalidInt() {
+        assertParseThrows("12 a");
+    }
+
+    @Test
+    public void testParseInvalidDecimal() {
+        assertParseThrows("-12.");
+    }
+
+    @Test
+    public void testParseInvalidFraction() {
+        assertParseThrows("/4");
+    }
+
+    @Test
+    public void testParseInvalidMixed() {
+        assertParseThrows("- 1 3/");
     }
 }
