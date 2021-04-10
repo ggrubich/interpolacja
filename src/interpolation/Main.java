@@ -7,6 +7,9 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.Event;
+import javafx.geometry.Pos;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.KeyCode;
 import javafx.scene.text.Font;
 import javafx.event.ActionEvent;
@@ -21,6 +24,7 @@ import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
 import java.util.Collections;
+import java.util.function.Supplier;
 
 // Custom TableCell subclass that handles parse errors correctly.
 class RationalCell extends TableCell<Point, Rational> {
@@ -233,9 +237,28 @@ class InputView extends VBox {
     }
 }
 
+class CopyButton extends Button {
+    private final Supplier<String> supplier;
+
+    public CopyButton(Supplier<String> supplier_) {
+        super("Copy");
+        supplier = supplier_;
+        setFont(new Font(11));
+        setMinWidth(45);
+        setOnAction(this::onAction);
+    }
+
+    protected void onAction(ActionEvent ev) {
+        ev.consume();
+        ClipboardContent content = new ClipboardContent();
+        content.putString(supplier.get());
+        Clipboard.getSystemClipboard().setContent(content);
+    }
+}
+
 class ResultView extends VBox {
     private final Property<Interpolation> interpolation;
-    private final Text polynomial;
+    private final Text polyText;
 
     public ResultView(Property<Interpolation> interpolation_) {
         super();
@@ -247,20 +270,31 @@ class ResultView extends VBox {
         setMinWidth(200);
         HBox.setHgrow(this, Priority.ALWAYS);
 
-        final Label polynomialLabel = new Label("Polynomial:");
+        final Label polyLabel = new Label("Polynomial:");
 
-        polynomial = new Text();
-        polynomial.setFont(new Font(30));
-        polynomial.wrappingWidthProperty().bind(widthProperty().multiply(0.9));
-        updatePolynomial();
+        final HBox polyBox = new HBox();
+        polyBox.setAlignment(Pos.CENTER_LEFT);
 
-        getChildren().addAll(polynomialLabel, polynomial);
+        polyText = new Text();
+        polyText.setFont(new Font(30));
+        polyText.wrappingWidthProperty().bind(widthProperty().subtract(80));
+        updatePolyText();
 
-        interpolation.addListener(change -> updatePolynomial());
+        CopyButton polyCopy = new CopyButton(this::getPolyContent);
+
+        polyBox.getChildren().addAll(polyText, polyCopy);
+
+        getChildren().addAll(polyLabel, polyBox);
+
+        interpolation.addListener(change -> updatePolyText());
     }
 
-    private void updatePolynomial() {
-        polynomial.setText("P(x) = " + interpolation.getValue().getResult().toString());
+    private String getPolyContent() {
+        return interpolation.getValue().getResult().toString();
+    }
+
+    private void updatePolyText() {
+        polyText.setText("P(x) = " + getPolyContent());
     }
 }
 
