@@ -116,10 +116,11 @@ public class PolyTest {
         Poly p = new Poly(
             new Rational(1),
             new Rational(-2),
-            new Rational(1, 2),
+            new Rational(1, 3),
+            new Rational(-3, 2),
             new Rational(-1)
         );
-        assertEquals("-x^3 + (1/2)x^2 - 2x + 1", p.toString(), "to string");
+        assertEquals("-x^4 - 1.5x^3 + (1/3)x^2 - 2x + 1", p.toString(), "to string");
 
     }
 }

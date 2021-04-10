@@ -104,6 +104,7 @@ public class Poly {
             if (a.getNum() == 0) {
                 continue;
             }
+            // sign
             if (buf.length() == 0) {
                 if (a.getNum() < 0) {
                     buf.append("-");
@@ -112,16 +113,18 @@ public class Poly {
             else {
                 buf.append(a.getNum() >= 0 ? " + " : " - ");
             }
+            // number
             a = a.abs();
             if (i == 0) {
                 buf.append(a);
             }
             else {
-                if (a.getDen() == 1 && a.getNum() > 1) {
-                    buf.append(a);
-                }
-                else if (a.getDen() > 1) {
-                    buf.append("(" + a + ")");
+                if (!(a.getDen() == 1 && a.getNum() == 1)) {
+                    String str = a.toString();
+                    if (str.contains("/") || str.contains(" ")) {
+                        str = "(" + str + ")";
+                    }
+                    buf.append(str);
                 }
                 buf.append("x");
                 if (i > 1) {

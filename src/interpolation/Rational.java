@@ -1,6 +1,7 @@
 package interpolation;
 
 import java.util.Objects;
+import java.util.Optional;
 
 // Immutable rational numbers.
 // Note that constructors and methods in this class will always convert
@@ -120,10 +121,47 @@ public class Rational implements Comparable<Rational> {
         return Long.signum(sub(x).getNum());
     }
 
+    public Optional<String> toDecimal() {
+        // A fraction can be converted to a decimal iff its denominator
+        // can be represented as 2^i * 5^j. In that case, the denominator
+        // of the decimal fraction is (2*5)^max{i,j}.
+        long q = den;
+        long i = 0;
+        long j = 0;
+        while (q % 2 == 0) {
+            q /= 2;
+            ++i;
+        }
+        while (q % 5 == 0) {
+            q /= 5;
+            ++j;
+        }
+        if (q > 1) {
+            return Optional.empty();
+        }
+
+        q = den;
+        while (i < j) {
+            q *= 2;
+            ++i;
+        }
+        while (j < i) {
+            q *= 5;
+            ++j;
+        }
+        long p = Math.abs(num * (q / den));
+        // Explicit "-" is required for numbers starting with 0.
+        return Optional.of((num < 0 ? "-" : "") + p / q + "." + p % q);
+    }
+
     @Override
     public String toString() {
         if (den == 1) {
             return Long.toString(num);
+        }
+        Optional<String> dec = toDecimal();
+        if (dec.isPresent()) {
+            return dec.get();
         }
         else if (Math.abs(num) < den){
             return num + "/" + den;

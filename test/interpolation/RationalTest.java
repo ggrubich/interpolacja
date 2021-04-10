@@ -121,6 +121,11 @@ public class RationalTest {
     }
 
     @Test
+    public void testToStringDecimal() {
+        assertEquals("-0.375", new Rational(-3, 8).toString(), "to string");
+    }
+
+    @Test
     public void testToStringFraction() {
         assertEquals("-5/7", new Rational(-5, 7).toString(), "to string");
     }
