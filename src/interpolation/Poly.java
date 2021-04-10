@@ -107,7 +107,7 @@ public class Poly {
             // sign
             if (buf.length() == 0) {
                 if (a.getNum() < 0) {
-                    buf.append("-");
+                    buf.append("- ");
                 }
             }
             else {

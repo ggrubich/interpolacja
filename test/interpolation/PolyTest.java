@@ -108,7 +108,7 @@ public class PolyTest {
     @Test
     public void testToStringOne() {
         Poly p = new Poly(new Rational(0), new Rational(0), new Rational(-2));
-        assertEquals("-2x^2", p.toString(), "to string");
+        assertEquals("- 2x^2", p.toString(), "to string");
     }
 
     @Test
@@ -120,7 +120,7 @@ public class PolyTest {
             new Rational(-3, 2),
             new Rational(-1)
         );
-        assertEquals("-x^4 - 1.5x^3 + (1/3)x^2 - 2x + 1", p.toString(), "to string");
+        assertEquals("- x^4 - 1.5x^3 + (1/3)x^2 - 2x + 1", p.toString(), "to string");
 
     }
 }
