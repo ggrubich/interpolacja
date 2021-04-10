@@ -7,6 +7,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.Event;
+import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
@@ -259,6 +260,9 @@ class CopyButton extends Button {
 class ResultView extends VBox {
     private final Property<Interpolation> interpolation;
     private final Text polyText;
+    private Rational evalPoint = new Rational(0);
+    private final TextField evalInput;
+    private final Text evalText;
 
     public ResultView(Property<Interpolation> interpolation_) {
         super();
@@ -270,6 +274,7 @@ class ResultView extends VBox {
         setMinWidth(200);
         HBox.setHgrow(this, Priority.ALWAYS);
 
+        // Polynomial
         final Label polyLabel = new Label("Polynomial:");
 
         final HBox polyBox = new HBox();
@@ -278,15 +283,57 @@ class ResultView extends VBox {
         polyText = new Text();
         polyText.setFont(new Font(30));
         polyText.wrappingWidthProperty().bind(widthProperty().subtract(80));
-        updatePolyText();
 
         CopyButton polyCopy = new CopyButton(this::getPolyContent);
 
         polyBox.getChildren().addAll(polyText, polyCopy);
 
-        getChildren().addAll(polyLabel, polyBox);
+        // Evaluation
+        final Label evalLabel = new Label("Value in point:");
 
-        interpolation.addListener(change -> updatePolyText());
+        final HBox evalResultBox = new HBox();
+        evalResultBox.setAlignment(Pos.CENTER_LEFT);
+
+        evalText = new Text();
+        evalText.setFont(new Font(18));
+        evalText.wrappingWidthProperty().bind(widthProperty().subtract(80));
+
+        final CopyButton evalCopy = new CopyButton(() -> getEvalResult().toString());
+
+        evalResultBox.getChildren().addAll(evalText, evalCopy);
+
+        final HBox evalInputBox = new HBox();
+        evalInputBox.setSpacing(6.0);
+
+        evalInput = new TextField();
+        evalInput.setMinWidth(50);
+        evalInput.setFont(new Font(12));
+        evalInput.setText(evalPoint.toString());
+        evalInput.setOnAction(this::onEvalCommit);
+
+        final Button evalCommit = new Button("Eval");
+        evalCommit.setMinWidth(45);
+        evalCommit.setFont(new Font(12));
+        evalCommit.setOnAction(this::onEvalCommit);
+
+        evalInputBox.getChildren().addAll(evalInput, evalCommit);
+
+        getChildren().addAll(
+                polyLabel,
+                polyBox,
+                new Separator(Orientation.HORIZONTAL),
+                evalLabel,
+                evalResultBox,
+                evalInputBox
+        );
+
+        updateAll();
+        interpolation.addListener(change -> this.updateAll());
+    }
+
+    private void updateAll() {
+        updatePolyText();
+        updateEvalText();
     }
 
     private String getPolyContent() {
@@ -295,6 +342,28 @@ class ResultView extends VBox {
 
     private void updatePolyText() {
         polyText.setText("P(x) = " + getPolyContent());
+    }
+
+    private Rational getEvalResult() {
+        return interpolation.getValue().getResult().eval(evalPoint);
+    }
+
+    private void updateEvalText() {
+        evalText.setText("P(" + evalPoint + ") = " + getEvalResult());
+    }
+
+    private void onEvalCommit(ActionEvent ev) {
+        ev.consume();
+        try {
+            evalPoint = Rational.parse(evalInput.getText());
+            updateEvalText();
+        }
+        catch (NumberFormatException ex) {
+            Alert alert = new Alert(Alert.AlertType.ERROR, ex.getMessage());
+            alert.show();
+            evalInput.requestFocus();
+            return;
+        }
     }
 }
 
