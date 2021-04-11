@@ -121,8 +121,8 @@ public class Rational implements Comparable<Rational> {
         return Long.signum(sub(x).getNum());
     }
 
-    public float getDecimal(){
-        return getNum()/getDen();
+    public float toFloat(){
+        return Float.parseFloat(Long.toString(getNum()))/ Float.parseFloat(Long.toString(getDen()));
     }
 
     public Optional<String> toDecimal() {

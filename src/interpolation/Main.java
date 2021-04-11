@@ -9,8 +9,8 @@ import javafx.collections.ObservableList;
 import javafx.event.Event;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
-import javafx.scene.chart.Chart;
 import javafx.scene.chart.LineChart;
+import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
@@ -26,7 +26,9 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
+import java.util.List;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.function.Supplier;
 
@@ -374,12 +376,17 @@ class GraphView extends VBox{
     private final Property<Interpolation> interpolation;
     private final ObservableList<Point> points;
     private LineChart<Number, Number> lineChart;
+    private final NumberAxis xAxis;
+    private final NumberAxis yAxis;
     //private final Text graphText;
 
     public GraphView(Property<Interpolation> interpolation_, ObservableList<Point> points_){
         super();
         interpolation = interpolation_;
         points = points_;
+        xAxis = new NumberAxis();
+        yAxis = new NumberAxis();
+        lineChart = new LineChart<Number,Number>(xAxis,yAxis);
 
         setPadding(new Insets(50, 20.0, 10.0, 20.0));
         setSpacing(10.0);
@@ -395,14 +402,30 @@ class GraphView extends VBox{
         getChildren().addAll(
                 lineChart
         );
+        interpolation.addListener(change -> this.updateGraph());
     }
 
     private void updateGraph(){
-        lineChart.getData().clear();
-        XYChart.Series<Number,Number> series = new XYChart.Series<Number,Number>();
-        for(int i = -10; i <= 10; i++){
-            series.getData().add(new XYChart.Data<Number, Number>(i, interpolation.getValue().getResult().eval(new Rational(i)).getDecimal()));
+        if(interpolation.getValue().getResult().degree() >= 0) {
+            lineChart.getData().clear();
+            XYChart.Series<Number, Number> series = new XYChart.Series<Number, Number>();
+            series.setName("Newton Interpolation");
+            for (int i = -10; i <= 10; i++) {
+                series.getData().add(new XYChart.Data<Number, Number>(i, interpolation.getValue().getResult().eval(new Rational(i)).toFloat()));
+            }
             lineChart.getData().add(series);
+
+            XYChart.Series<Number, Number> series1 = new XYChart.Series<Number,Number>();
+            series1.setName("(x,y)");
+            ArrayList<Point> pointList = new ArrayList<Point>(interpolation.getValue().getPoints());
+
+            for(Point i : pointList) {
+                series1.getData().add(new XYChart.Data(i.getX().toFloat(),i.getY().toFloat()));
+            }
+            lineChart.getData().add(series1);
+
+        lineChart.setAnimated(false);
+        lineChart.setCreateSymbols(true);
         }
     }
 }
@@ -445,7 +468,9 @@ public class Main extends Application {
 
         primaryStage.minWidthProperty().bind(input.minWidthProperty().add(result.minWidthProperty()));
         primaryStage.setMinHeight(200);
-        primaryStage.setScene(new Scene(root, 800, 600));
+        Scene scene = new Scene(root, 800, 600);
+        scene.getStylesheets().add(getClass().getResource("chart.css").toExternalForm());
+        primaryStage.setScene(scene);
         primaryStage.show();
     }
 }
