@@ -9,6 +9,9 @@ import javafx.collections.ObservableList;
 import javafx.event.Event;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
+import javafx.scene.chart.Chart;
+import javafx.scene.chart.LineChart;
+import javafx.scene.chart.XYChart;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.KeyCode;
@@ -367,6 +370,45 @@ class ResultView extends VBox {
     }
 }
 
+class GraphView extends VBox{
+    private final Property<Interpolation> interpolation;
+    private final ObservableList<Point> points;
+    private LineChart<Number, Number> lineChart;
+    //private final Text graphText;
+
+    public GraphView(Property<Interpolation> interpolation_, ObservableList<Point> points_){
+        super();
+        interpolation = interpolation_;
+        points = points_;
+
+        setPadding(new Insets(50, 20.0, 10.0, 20.0));
+        setSpacing(10.0);
+        setPrefWidth(800);
+        setMinWidth(200);
+        HBox.setHgrow(this, Priority.ALWAYS);
+
+        updateGraph();
+
+        final HBox polyBox = new HBox();
+        polyBox.setAlignment(Pos.BOTTOM_RIGHT);
+
+        getChildren().addAll(
+                lineChart
+        );
+    }
+
+    private void updateGraph(){
+        lineChart.getData().clear();
+        XYChart.Series<Number,Number> series = new XYChart.Series<Number,Number>();
+        for(int i = -10; i <= 10; i++){
+            series.getData().add(new XYChart.Data<Number, Number>(i, interpolation.getValue().getResult().eval(new Rational(i)).getDecimal()));
+            lineChart.getData().add(series);
+        }
+    }
+}
+
+
+
 public class Main extends Application {
     private final ObservableList<Point> points = FXCollections.observableArrayList();
     private final Property<Interpolation> interpolation =
@@ -387,6 +429,9 @@ public class Main extends Application {
 
         ResultView result = new ResultView(interpolation);
         root.getChildren().add(result);
+
+        GraphView graph = new GraphView(interpolation, points);
+        root.getChildren().add(graph);
 
         points.addListener((ListChangeListener<Point>) change -> {
             boolean reload = false;
