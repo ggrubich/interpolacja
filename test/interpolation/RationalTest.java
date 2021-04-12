@@ -192,6 +192,14 @@ public class RationalTest {
         assertParse(new Rational(7, 4), "1 +3/ 4");
     }
 
+    @Test
+    public void testParseBig() {
+        String input = "-92233720368547758070000.1234";
+        String p = "-922337203685477580700001234";
+        String q = "10000";
+        assertParse(new Rational(new BigInteger(p), new BigInteger(q)), input);
+    }
+
     private void assertParseThrows(String input) {
         assertThrows(NumberFormatException.class,
                 () -> Rational.parse(input),

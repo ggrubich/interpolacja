@@ -201,6 +201,8 @@ public class Rational implements Comparable<Rational> {
     }
 
     private static class Parser {
+        private static final BigInteger TEN = BigInteger.valueOf(10);
+
         private final String input;
         private int position;
 
@@ -249,14 +251,14 @@ public class Rational implements Comparable<Rational> {
         }
 
         // 123
-        private long parseNatural() {
+        private BigInteger parseNatural() {
             if (!Character.isDigit(get())) {
                 error("expected digit");
             }
-            long n = 0;
+            BigInteger n = BigInteger.ZERO;
             do {
-                n *= 10;
-                n += Character.digit(get(), 10);
+                BigInteger d = BigInteger.valueOf(Character.digit(get(), 10));
+                n = n.multiply(TEN).add(d);
                 next();
             } while (Character.isDigit(get()));
             return n;
@@ -265,18 +267,18 @@ public class Rational implements Comparable<Rational> {
         // 1234 (but means 1234/10000)
         private Rational parseDecimals() {
             int start = position;
-            long p = parseNatural();
-            long q = (long) Math.pow(10, position - start);
+            BigInteger p = parseNatural();
+            BigInteger q = TEN.pow(position - start);
             return new Rational(p, q);
         }
 
         // 12 / 34
         private Rational parseFraction() {
-            long p = parseNatural();
+            BigInteger p = parseNatural();
             skipSpace();
             require('/');
             skipSpace();
-            long q = parseNatural();
+            BigInteger q = parseNatural();
             return new Rational(p, q);
         }
 
@@ -297,7 +299,7 @@ public class Rational implements Comparable<Rational> {
                 if (attempt('/')) {
                     // fraction
                     skipSpace();
-                    long q = parseNatural();
+                    BigInteger q = parseNatural();
                     out = out.div(new Rational(q));
                 } else if (!eof()) {
                     // mixed
