@@ -121,10 +121,6 @@ public class Rational implements Comparable<Rational> {
         return Long.signum(sub(x).getNum());
     }
 
-    public float getDecimal(){
-        return getNum()/getDen();
-    }
-
     public Optional<String> toDecimal() {
         // A fraction can be converted to a decimal iff its denominator
         // can be represented as 2^i * 5^j. In that case, the denominator
