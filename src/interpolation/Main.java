@@ -9,6 +9,9 @@ import javafx.collections.ObservableList;
 import javafx.event.Event;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
+import javafx.scene.chart.LineChart;
+import javafx.scene.chart.NumberAxis;
+import javafx.scene.chart.XYChart;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.KeyCode;
@@ -25,6 +28,7 @@ import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.function.Supplier;
 
 // Custom TableCell subclass that handles parse errors correctly.
@@ -257,12 +261,125 @@ class CopyButton extends Button {
     }
 }
 
+class InterpolationChart extends LineChart<Number, Number> {
+    private static final Rational marginRatio = new Rational(1, 6);
+    private static final int nPlotPoints = 500;
+    private static final int nTicks = 20;
+    private static final Rational defaultWidth = new Rational(20);
+
+    private final Property<Interpolation> interpolation;
+    private final NumberAxis xAxis;
+    private final NumberAxis yAxis;
+    private final XYChart.Series<Number, Number> plot;
+    private final XYChart.Series<Number, Number> data;
+
+    public InterpolationChart(Property<Interpolation> interpolation_) {
+        super(new NumberAxis(), new NumberAxis());
+        interpolation = interpolation_;
+        xAxis = (NumberAxis) getXAxis();
+        yAxis = (NumberAxis) getYAxis();
+        xAxis.setLabel("x");
+        xAxis.setAutoRanging(false);
+        yAxis.setLabel("y");
+        yAxis.setForceZeroInRange(false);
+        plot = new XYChart.Series<>();
+        plot.setName("P(x)");
+        data = new XYChart.Series<>();
+        data.setName("data points");
+        getData().add(plot);
+        getData().add(data);
+        setAnimated(false);
+
+        draw();
+        interpolation.addListener(change -> draw());
+    }
+
+    private void draw() {
+        plot.getData().clear();
+        if (interpolation.getValue().getPoints().size() >= 2) {
+            drawMultiple();
+        }
+        else {
+            drawConst();
+        }
+        data.getData().clear();
+        for (Point p : interpolation.getValue().getPoints()) {
+            data.getData().add(new XYChart.Data<>(p.getX().toDouble(), p.getY().toDouble()));
+        }
+    }
+
+    private void drawMultiple() {
+        List<Point> points = interpolation.getValue().getPoints();
+        Rational min = points.get(0).getX();
+        Rational max = points.get(0).getX();
+        for (int i = 1; i < points.size(); ++i) {
+            Rational x = points.get(i).getX();
+            if (x.compareTo(min) < 0) {
+                min = x;
+            }
+            if (x.compareTo(max) > 0) {
+                max = x;
+            }
+        }
+        Rational margin = (max.sub(min)).mul(marginRatio);
+        Rational start = min.sub(margin);
+        Rational stop = max.add(margin);
+        drawFunctionInRange(start, stop);
+    }
+
+    private void drawConst() {
+        Rational middle = new Rational(0);
+        if (interpolation.getValue().getPoints().size() > 0) {
+            middle = interpolation.getValue().getPoints().get(0).getX();
+        }
+        Rational half = defaultWidth.div(new Rational(2));
+        drawFunctionInRange(middle.sub(half), middle.add(half));
+    }
+
+    private void drawFunctionInRange(Rational start, Rational stop) {
+        double tickApprox = (stop.toDouble() - start.toDouble()) / (double) nTicks;
+        // We construct the tick value from specific multiples to make it more readable.
+        double tick = 1.0;
+        if (tickApprox >= 1.0) {
+            while (tick * 10.0 <= tickApprox) {
+                tick *= 10.0;
+            }
+            while (tick * 5.0 <= tickApprox) {
+                tick *= 5.0;
+            }
+        }
+        else {
+            while (tick / 10.0 >= tickApprox) {
+                tick /= 10.0;
+            }
+            while (tick / 2.0 >= tickApprox) {
+                tick /= 2.0;
+            }
+        }
+        // Since ticks are counted from the lower bound, we need to adjust it properly.
+        xAxis.setLowerBound(start.toDouble() - (start.toDouble() % tick));
+        xAxis.setUpperBound(stop.toDouble());
+        xAxis.setTickUnit(tick);
+        Rational step = (stop.sub(start)).div(new Rational(nPlotPoints));
+        // Avoid the situation where subtracting modulo from the lower bound
+        // leaves an empty space at the start of the chart.
+        while (start.toDouble() > xAxis.getLowerBound()) {
+            start = start.sub(step);
+        }
+        for (Rational x = start; x.compareTo(stop) <= 0; x = x.add(step)) {
+            Rational y = interpolation.getValue().getResult().eval(x);
+            plot.getData().add(new XYChart.Data<>(x.toDouble(), y.toDouble()));
+        }
+    }
+}
+
 class ResultView extends VBox {
     private final Property<Interpolation> interpolation;
     private final Text polyText;
     private Rational evalPoint = new Rational(0);
     private final TextField evalInput;
     private final Text evalText;
+    private final InterpolationChart chart;
 
     public ResultView(Property<Interpolation> interpolation_) {
         super();
@@ -318,13 +435,21 @@ class ResultView extends VBox {
 
         evalInputBox.getChildren().addAll(evalInput, evalCommit);
 
+        // Chart
+        final Label chartLabel = new Label("Chart:");
+        chart = new InterpolationChart(interpolation);
+        VBox.setVgrow(chart, Priority.ALWAYS);
+
         getChildren().addAll(
                 polyLabel,
                 polyBox,
                 new Separator(Orientation.HORIZONTAL),
                 evalLabel,
                 evalResultBox,
-                evalInputBox
+                evalInputBox,
+                new Separator(Orientation.HORIZONTAL),
+                chartLabel,
+                chart
         );
 
         updateAll();
@@ -400,7 +525,9 @@ public class Main extends Application {
 
         primaryStage.minWidthProperty().bind(input.minWidthProperty().add(result.minWidthProperty()));
         primaryStage.setMinHeight(200);
-        primaryStage.setScene(new Scene(root, 800, 600));
+        Scene scene = new Scene(root, 800, 600);
+        scene.getStylesheets().add(getClass().getResource("/style.css").toExternalForm());
+        primaryStage.setScene(scene);
         primaryStage.show();
     }
 }

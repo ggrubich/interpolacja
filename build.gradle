@@ -10,6 +10,7 @@ plugins {
 
 sourceSets {
     main.java.srcDirs = ["src"]
+    main.resources.srcDirs = ["resources"]
     test.java.srcDirs = ["test"]
 }
 
