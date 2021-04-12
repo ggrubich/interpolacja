@@ -14,7 +14,7 @@ public class Poly {
     // Constructs the polynomial from given coefficients.
     public Poly(Rational... as) {
         int n = as.length;
-        while (n > 0 && as[n-1].getNum() == 0) {
+        while (n > 0 && as[n-1].signum() == 0) {
             --n;
         }
         coeffs = new Rational[n];
@@ -101,17 +101,17 @@ public class Poly {
         StringBuilder buf = new StringBuilder();
         for (int i = degree(); i >= 0; --i) {
             Rational a = get(i);
-            if (a.getNum() == 0) {
+            if (a.signum() == 0) {
                 continue;
             }
             // sign
             if (buf.length() == 0) {
-                if (a.getNum() < 0) {
+                if (a.signum() < 0) {
                     buf.append("- ");
                 }
             }
             else {
-                buf.append(a.getNum() >= 0 ? " + " : " - ");
+                buf.append(a.signum() >= 0 ? " + " : " - ");
             }
             // number
             a = a.abs();
@@ -119,7 +119,7 @@ public class Poly {
                 buf.append(a);
             }
             else {
-                if (!(a.getDen() == 1 && a.getNum() == 1)) {
+                if (!a.equals(new Rational(1))) {
                     String str = a.toString();
                     if (str.contains("/") || str.contains(" ")) {
                         str = "(" + str + ")";

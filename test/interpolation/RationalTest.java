@@ -3,6 +3,8 @@ package interpolation;
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Test;
 
+import java.math.BigInteger;
+
 public class RationalTest {
     @Test
     public void testInitZero() {
@@ -12,8 +14,8 @@ public class RationalTest {
     }
 
     private void assertRationalEquals(long p, long q, Rational sut, String desc) {
-        assertEquals(p, sut.getNum(), "numerator of " + desc);
-        assertEquals(q, sut.getDen(), "denominator of " + desc);
+        assertEquals(BigInteger.valueOf(p), sut.getNum(), "numerator of " + desc);
+        assertEquals(BigInteger.valueOf(q), sut.getDen(), "denominator of " + desc);
     }
 
     @Test
@@ -95,6 +97,21 @@ public class RationalTest {
         assertEquals(new Rational(2, 3),
                 new Rational(1, 2).div(new Rational(3, 4)),
                 "1/2 / 3/4");
+    }
+
+    @Test
+    public void testSignumMinus() {
+        assertEquals(-1, new Rational(-3, 4).signum(), "sgn(-3/4) = -1");
+    }
+
+    @Test
+    public void testSignumZero() {
+        assertEquals(0, new Rational(0).signum(), "sgn(0) = 0");
+    }
+
+    @Test
+    public void testSignumPlus() {
+        assertEquals(1, new Rational(2, 7).signum(), "sgn(2/7) = 1");
     }
 
     @Test

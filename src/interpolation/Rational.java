@@ -1,5 +1,6 @@
 package interpolation;
 
+import java.math.BigInteger;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -9,72 +10,68 @@ import java.util.Optional;
 // a non-negative denominator. So, for example, constructing 2/-4
 // will actually yield -1/2 and multiplication 1/2 * 2/3 returns 1/3.
 public class Rational implements Comparable<Rational> {
-    private final long num;
-    private final long den;
+    private final BigInteger num;
+    private final BigInteger den;
 
-    public long getNum() {
+    public BigInteger getNum() {
         return num;
     }
 
-    public long getDen() {
+    public BigInteger getDen() {
         return den;
     }
 
-    // Greatest common divisor.
-    private long gcd(long a, long b) {
-        a = Math.abs(a);
-        b = Math.abs(b);
-        while (b != 0) {
-            long tmp_b = b;
-            b = a % b;
-            a = tmp_b;
-        }
-        return a;
-    }
-
     // Least common multiple.
-    private long lcm(long a, long b) {
-        long d = gcd(a, b);
-        if (d == 0) {
-            return 0;
+    private BigInteger lcm(BigInteger a, BigInteger b) {
+        BigInteger d = a.gcd(b);
+        if (d.signum() == 0) {
+            return d;
         }
-        return (a / d) * b;
+        return a.divide(d).multiply(b);
     }
 
     // Construct a Rational from its fractional parts.
-    public Rational(long p, long q) {
-        if (q == 0) {
+    public Rational(BigInteger p, BigInteger q) {
+        if (q.signum() == 0) {
             throw new IllegalArgumentException("Denominator can't be 0");
         }
-        if (q < 0) {
-            p *= -1;
-            q *= -1;
+        if (q.signum() < 0) {
+            p = p.negate();
+            q = q.negate();
         }
-        long d = gcd(p, q);
-        num = p / d;
-        den = q / d;
+        BigInteger d = p.gcd(q);
+        num = p.divide(d);
+        den = q.divide(d);
+    }
+
+    public Rational(long p, long q) {
+        this(BigInteger.valueOf(p), BigInteger.valueOf(q));
     }
 
     // Construct a Rational from an integer.
+    public Rational(BigInteger n) {
+        this(n, BigInteger.ONE);
+    }
+
     public Rational(long n) {
         this(n, 1);
     }
 
     // |a|
     public Rational abs() {
-        return new Rational(Math.abs(num), den);
+        return new Rational(num.abs(), den);
     }
 
     // -a
     public Rational negate() {
-        return new Rational(-num, den);
+        return new Rational(num.negate(), den);
     }
 
     // a + b
     public Rational add(Rational x) {
         // We use the lcm to minimize the likelihood of overflows.
-        long q = lcm(den, x.den);
-        long p = num * (q / den) + x.num * (q / x.den);
+        BigInteger q = lcm(den, x.den);
+        BigInteger p = num.multiply(q.divide(den)).add(x.num.multiply(q.divide(x.den)));
         return new Rational(p, q);
     }
 
@@ -92,14 +89,22 @@ public class Rational implements Comparable<Rational> {
     public Rational mul(Rational x) {
         // We reduce the fraction before doing the multiplication to minimize
         // the likelihood of overflows.
-        long d1 = gcd(num, x.den);
-        long d2 = gcd(x.num, den);
-        return new Rational((num / d1) * (x.num / d2), (den / d2) * (x.den / d1));
+        BigInteger d1 = num.gcd(x.den);
+        BigInteger d2 = x.num.gcd(den);
+        return new Rational(
+                num.divide(d1).multiply(x.num.divide(d2)),
+                den.divide(d2).multiply(x.den.divide(d1))
+        );
     }
 
     // a / b
     public Rational div(Rational x) {
         return mul(x.invert());
+    }
+
+    // sgn(a)
+    public int signum() {
+        return num.signum();
     }
 
     @Override
@@ -108,7 +113,7 @@ public class Rational implements Comparable<Rational> {
             return false;
         }
         Rational other = (Rational)obj;
-        return num == other.num && den == other.den;
+        return Objects.equals(num, other.num) && Objects.equals(den, other.den);
     }
 
     @Override
@@ -118,60 +123,62 @@ public class Rational implements Comparable<Rational> {
 
     @Override
     public int compareTo(Rational x) {
-        return Long.signum(sub(x).getNum());
+        return sub(x).signum();
     }
 
     public double toDouble() {
-        return (double) num / (double) den;
+        return num.doubleValue() / den.doubleValue();
     }
 
     public Optional<String> toDecimal() {
         // A fraction can be converted to a decimal iff its denominator
         // can be represented as 2^i * 5^j. In that case, the denominator
         // of the decimal fraction is (2*5)^max{i,j}.
-        long q = den;
+        BigInteger q = den;
         long i = 0;
         long j = 0;
-        while (q % 2 == 0) {
-            q /= 2;
+        BigInteger TWO = BigInteger.valueOf(2);
+        BigInteger FIVE = BigInteger.valueOf(5);
+        while (q.remainder(TWO).signum() == 0) {
+            q = q.divide(TWO);
             ++i;
         }
-        while (q % 5 == 0) {
-            q /= 5;
+        while (q.remainder(FIVE).signum() == 0) {
+            q = q.divide(FIVE);
             ++j;
         }
-        if (q > 1) {
+        if (!q.equals(BigInteger.ONE)) {
             return Optional.empty();
         }
 
         q = den;
         while (i < j) {
-            q *= 2;
+            q = q.multiply(TWO);
             ++i;
         }
         while (j < i) {
-            q *= 5;
+            q = q.multiply(FIVE);
             ++j;
         }
-        long p = Math.abs(num * (q / den));
+        BigInteger p = num.multiply(q.divide(den)).abs();
         // Explicit "-" is required for numbers starting with 0.
-        return Optional.of((num < 0 ? "-" : "") + p / q + "." + p % q);
+        return Optional.of((num.signum() < 0 ? "-" : "") + p.divide(q) + "." + p.mod(q));
     }
 
     @Override
     public String toString() {
-        if (den == 1) {
-            return Long.toString(num);
+        if (den.equals(BigInteger.ONE)) {
+            return num.toString();
         }
         Optional<String> dec = toDecimal();
         if (dec.isPresent()) {
             return dec.get();
         }
-        else if (Math.abs(num) < den){
+        else if (num.abs().compareTo(den) < 0) {
             return num + "/" + den;
         }
         else {
-            return (num / den) + " " + (Math.abs(num) % den) + "/" + den;
+            return num.divide(den) + " " + (num.abs().mod(den)) + "/" + den;
         }
     }
 
