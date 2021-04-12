@@ -143,6 +143,11 @@ public class RationalTest {
     }
 
     @Test
+    public void testToStringLeadingZero() {
+        assertEquals("1.0003", new Rational(10003, 10000).toString(), "to string");
+    }
+
+    @Test
     public void testToStringFraction() {
         assertEquals("-5/7", new Rational(-5, 7).toString(), "to string");
     }

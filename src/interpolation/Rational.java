@@ -130,6 +130,15 @@ public class Rational implements Comparable<Rational> {
         return num.doubleValue() / den.doubleValue();
     }
 
+    private String zeroPad(long width, String str) {
+        StringBuilder buf = new StringBuilder();
+        for (int i = str.length(); i < width; ++i) {
+            buf.append("0");
+        }
+        buf.append(str);
+        return buf.toString();
+    }
+
     public Optional<String> toDecimal() {
         // A fraction can be converted to a decimal iff its denominator
         // can be represented as 2^i * 5^j. In that case, the denominator
@@ -162,7 +171,16 @@ public class Rational implements Comparable<Rational> {
         }
         BigInteger p = num.multiply(q.divide(den)).abs();
         // Explicit "-" is required for numbers starting with 0.
-        return Optional.of((num.signum() < 0 ? "-" : "") + p.divide(q) + "." + p.mod(q));
+        // Padding is necessary to properly display numbers with leading zeros
+        // in fractional part, e.g. "1.0003".
+        StringBuilder buf = new StringBuilder();
+        if (num.signum() < 0) {
+            buf.append("-");
+        }
+        buf.append(p.divide(q));
+        buf.append(".");
+        buf.append(zeroPad(i, p.mod(q).toString()));
+        return Optional.of(buf.toString());
     }
 
     @Override
